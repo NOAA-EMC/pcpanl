@@ -1,0 +1,42 @@
+#%Module######################################################################
+##                                                           Ying.Lin@noaa.gov
+##                                                           NOAA/NWS/NCEP/EMC
+## PCPANL v4.0.0
+##_____________________________________________________
+proc ModulesHelp { } {
+puts stderr "Set environment veriables for PCPANL"
+puts stderr "This module initializes the environment "
+puts stderr "for the Intel Compiler Suite $version\n"
+}
+module-whatis "PCPANL whatis description"
+
+set ver v4.0.0
+set envir prod
+
+set sys [uname sysname]
+
+setenv COMP ifort
+
+setenv D_FFLAGS_CHKBNDS "-g -check bounds -traceback"
+
+# Loading Intel Compiler Suite
+module load ips/18.0.1.163
+module load impi/18.0.1
+
+# Loading nceplibs modules
+module load bacio/2.0.2
+module load w3nco/2.0.6
+module load w3emc/2.3.0
+
+# For grib2: 
+module load g2/3.1.0
+module load jasper/1.900.1
+module load libpng/1.2.44
+module load zlib/1.2.11
+
+# user library:
+setenv WGRIB2LIB /gpfs/dell2/emc/verification/noscrub/Ying.Lin/pcpanl/pcpanl.${ver}/lib/grib2/lib/libwgrib2.a
+setenv WGRIB2INC /gpfs/dell2/emc/verification/noscrub/Ying.Lin/pcpanl/pcpanl.${ver}/lib/grib2/lib
+# NCO: please replace the above with the following: 
+# setenv WGRIB2LIB /gpfs/dell1/nco/ops/nw${envir}/pcpanl.${ver}/lib/grib2/lib/libwgrib2.a
+# setenv WGRIB2INC /gpfs/dell1/nco/ops/nw${envir}/pcpanl.${ver}/lib/grib2/lib

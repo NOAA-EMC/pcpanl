@@ -1,0 +1,75 @@
+#!/bin/ksh
+set -x
+
+
+# CALL executable job script here
+
+# This script has two optional arguments:
+#   arg 1: yyyymmddhh 
+#   arg 2: debug (if in debug mode, do not delete the working directory)
+
+# 2019/11: note about the run cycle: since we're now triggering PCPANL at hh:55,
+#   if there is excessive wait time in the batch queue, the job might not start
+#   until after the top of the next hour.  So check for the current minute: 
+#   if it's less than 55, then the run cycle is for the previous hour. 
+
+export retro=N
+if [ $# -ge 1 ]; then
+  export retro=Y
+  export pdyhh=$1
+else
+  minute=`date +%M`
+  if [ $minute -lt 50 ]; then
+    pdyhh=`date +%Y%m%d%H -d "1 hour ago"`
+  else
+    pdyhh=`date +%Y%m%d%H`
+  fi
+fi
+export cyc=`echo $pdyhh | cut -c 9-10`
+
+# arg #2: optional debug mode - the working directory is not deleted by the 
+# JOBS script
+export debug=N
+if [ $# -ge 2 ]; then
+  arg2=$2
+  if [ $arg2 = debug ]; then
+    export debug=Y
+  fi
+fi
+export KEEPDATA=YES
+# arg #3: run in the non-POE mode, only one run (erly or mid or late) is made.
+# 
+
+if [ "$envir" = userdev ]; then 
+  USERHOME=/gpfs/dell2/emc/verification/noscrub/Ying.Lin
+  export HOMEpcpanl=$USERHOME/pcpanl/pcpanl.$model_ver
+  export HOMEurma=$USERHOME/pcpanl/urma.v2.8.0
+  # outid is what prod uses to name the job output file, e.g.
+  # nam_pcpn_anal_2033.o2467312  (outid.$o${pid}
+  # below is my approximation to prod outid:
+  export outid=pcpanl_`date +%H%M`
+  export DATAROOT=/gpfs/dell2/stmp/Ying.Lin/pcpanl
+  # NWROOT, COMROOT, DCOMROOT deinfed by prod_envir. 
+  # COMROOT: needed for setpdy,e.g. /com/date/t20z
+  export COMIN=/gpfs/dell2/ptmp/$LOGNAME/pcpanl
+  export COMOUT=$COMIN
+  export COMURMA=/gpfs/dell2/ptmp/$LOGNAME/pcpanl/pcpurma
+  export NOSCRUBDIR=$USERHOME/mrms-cmorph.arch
+# COMINhourly: for METAR files (e.g. /com/hourly/prod/hourly.20170713/sfctbl.14)
+#   Sometimes this is slow being synch'd to devwcoss.  Have a cron job
+#   copy it over from prodwcoss at 32 min past the top of the hour:
+#  export COMINhourly=`compath.py hourly/prod`/hourly
+# 2019/05/06: MDL dell transition,
+#   /com/hourly/prod/hourly.29190424/sfctbl.12
+# moved to
+#   /gpfs/dell1/nco/ops/com/mos/prod/hry_mos.20190424/sfctbl.12
+# Replace COMINhourly with COMINhry_mos
+# 
+# coltbl.xwp.wbg and wmogrib.tbl are not in Tide's /nwprod/gempak/fix yet.
+  export GEMFIX=$HOMEpcpanl/gempak/fix
+  $HOMEpcpanl/jobs/JPCPN_ANL
+#  set up 'send' later
+  bsub < $HOMEpcpanl/util.dev/send2rzdm.sh > /gpfs/dell2/ptmp/Ying.Lin/cron.out/bsub.pcpanl2rzdm 2>&1
+else
+  /nw${envir}/jobs/JPCPN_ANL
+fi
