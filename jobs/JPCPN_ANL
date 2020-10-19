@@ -96,6 +96,7 @@ export COMOUT=${COMOUT:-$COMROOT/${NET}/${envir}}
 export COMURMA=${COMURMA:-${COMROOT}/urma/${envir}}/pcpurma
 
 # Starting 14 May 2019 on Dell: DCOMROOT=/gpfs/dell1/nco/ops/dcom
+# Testing ....
 export MRMSDIR=$DCOMROOT/prod/ldmdata/obs/upperair/mrms/conus/MultiSensorQPE
 #export MRMSDIR=$DCOMROOT/dev/ldmdata/obs/upperair/mrms/conus/MultiSensorQPE
 
